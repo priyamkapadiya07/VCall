@@ -28,12 +28,8 @@ export default function Home() {
               <Video className="w-8 h-8 text-indigo-400" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-              Premium video meetings. <br />
-              <span className="text-indigo-400">Now free for everyone.</span>
+              Welcome to VCall
             </h1>
-            <p className="text-gray-400 text-lg">
-              Connect seamlessly with high-quality video and audio. No account required. Just create a room and share the link.
-            </p>
           </div>
         </div>
 
