@@ -17,9 +17,11 @@ if (CLIENT_URL.endsWith('/')) {
   CLIENT_URL = CLIENT_URL.slice(0, -1);
 }
 
+const allowedOrigins = [CLIENT_URL, 'http://localhost:5173'];
+
 // Middleware
 app.use(cors({
-  origin: CLIENT_URL,
+  origin: allowedOrigins,
   methods: ['GET', 'POST'],
   credentials: true
 }));
@@ -28,7 +30,7 @@ app.use(express.json());
 // Initialize Socket.IO
 const io = new Server(server, {
   cors: {
-    origin: CLIENT_URL,
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   }

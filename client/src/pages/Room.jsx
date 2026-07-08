@@ -78,11 +78,12 @@ export default function Room() {
             isLocal={false} 
             label="Remote User"
             objectFit="contain"
+            labelPosition="top-right"
           />
         </div>
 
         {/* Local Video (Picture-in-Picture style) */}
-        <div className="absolute bottom-24 right-4 md:bottom-32 md:right-6 w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video z-10 transition-all hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20">
+        <div className="absolute bottom-32 right-4 md:bottom-40 md:right-6 w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video z-10 transition-all hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20">
           <VideoPlayer 
             stream={localStream} 
             isLocal={true} 
