@@ -10,7 +10,12 @@ const server = http.createServer(app);
 
 // Environment variables
 const PORT = process.env.PORT || 5000;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+let CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+
+// Remove trailing slash if present to prevent CORS origin mismatch
+if (CLIENT_URL.endsWith('/')) {
+  CLIENT_URL = CLIENT_URL.slice(0, -1);
+}
 
 // Middleware
 app.use(cors({
