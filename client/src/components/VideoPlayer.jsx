@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { User, MicOff } from 'lucide-react';
 
-export default function VideoPlayer({ stream, isLocal, isMuted, label }) {
+export default function VideoPlayer({ stream, isLocal, isMuted, label, objectFit = 'cover' }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -30,7 +30,8 @@ export default function VideoPlayer({ stream, isLocal, isMuted, label }) {
         autoPlay
         playsInline
         muted={isLocal || isMuted}
-        className={`w-full h-full object-cover ${isLocal ? 'scale-x-[-1]' : ''}`}
+        className={`w-full h-full ${isLocal ? 'scale-x-[-1]' : ''}`}
+        style={{ objectFit: objectFit }}
       />
       
       {/* Label and Status */}

@@ -55,38 +55,40 @@ export default function Room() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f1115] relative overflow-hidden flex flex-col p-4 md:p-6">
+    <div className="h-[100dvh] w-full bg-[#0f1115] relative overflow-hidden flex flex-col">
       
       {/* Top Bar Info */}
-      <div className="absolute top-6 left-6 z-10">
-        <div className="glass-panel px-4 py-2 flex items-center gap-3">
+      <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
+        <div className="glass-panel px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3 text-sm md:text-base">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          <span className="font-medium">Room: {roomId}</span>
-          <span className="text-xs text-gray-500 uppercase tracking-wider ml-2 border-l border-white/10 pl-3">
+          <span className="font-medium truncate max-w-[100px] sm:max-w-none">Room: {roomId}</span>
+          <span className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wider ml-1 md:ml-2 border-l border-white/10 pl-2 md:pl-3">
             {connectionState}
           </span>
         </div>
       </div>
 
       {/* Main Video Layout */}
-      <div className="flex-1 w-full max-w-7xl mx-auto flex items-center justify-center gap-4 relative">
+      <div className="flex-1 w-full h-full relative">
         
         {/* Remote Video (Takes up full space) */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 bg-black">
           <VideoPlayer 
             stream={remoteStream} 
             isLocal={false} 
             label="Remote User"
+            objectFit="contain"
           />
         </div>
 
         {/* Local Video (Picture-in-Picture style) */}
-        <div className="absolute bottom-32 right-6 w-48 md:w-64 aspect-video z-10 transition-all hover:scale-105 duration-300">
+        <div className="absolute bottom-24 right-4 md:bottom-32 md:right-6 w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video z-10 transition-all hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20">
           <VideoPlayer 
             stream={localStream} 
             isLocal={true} 
             isMuted={!isAudioOn}
             label="You"
+            objectFit="cover"
           />
         </div>
       </div>
