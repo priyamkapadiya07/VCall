@@ -21,6 +21,7 @@ export default function Room() {
 
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isSwapped, setIsSwapped] = useState(false);
 
   const handleToggleAudio = () => {
     const newState = toggleAudio();
@@ -71,24 +72,29 @@ export default function Room() {
       {/* Main Video Layout */}
       <div className="flex-1 w-full h-full relative">
         
-        {/* Remote Video (Takes up full space) */}
+        {/* Main Video (Takes up full space) */}
         <div className="absolute inset-0 z-0 bg-black">
           <VideoPlayer 
-            stream={remoteStream} 
-            isLocal={false} 
-            label="Remote User"
+            stream={isSwapped ? localStream : remoteStream} 
+            isLocal={isSwapped} 
+            label={isSwapped ? "You" : "Remote User"}
             objectFit="contain"
             labelPosition="top-right"
+            isMuted={isSwapped ? !isAudioOn : false}
           />
         </div>
 
-        {/* Local Video (Picture-in-Picture style) */}
-        <div className="absolute bottom-32 right-4 md:bottom-40 md:right-6 w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video z-10 transition-all hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20">
+        {/* PIP Video (Picture-in-Picture style) */}
+        <div 
+          onClick={() => setIsSwapped(!isSwapped)}
+          className="absolute bottom-32 right-4 md:bottom-40 md:right-6 w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video z-10 transition-all hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20 cursor-pointer"
+          title="Click to swap videos"
+        >
           <VideoPlayer 
-            stream={localStream} 
-            isLocal={true} 
-            isMuted={!isAudioOn}
-            label="You"
+            stream={isSwapped ? remoteStream : localStream} 
+            isLocal={!isSwapped} 
+            isMuted={!isSwapped ? !isAudioOn : false}
+            label={isSwapped ? "Remote User" : "You"}
             objectFit="cover"
           />
         </div>
