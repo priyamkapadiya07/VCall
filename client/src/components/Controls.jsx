@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Mic, MicOff, Video, VideoOff, MonitorUp, PhoneOff, Copy, Check } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PictureInPicture, PhoneOff, Copy, Check } from 'lucide-react';
 
 export default function Controls({ 
   isAudioOn, 
   isVideoOn, 
   onToggleAudio, 
   onToggleVideo, 
+  onTogglePiP,
   onEndCall,
   roomId
 }) {
@@ -57,6 +58,15 @@ export default function Controls({
           }`}
         >
           {isVideoOn ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+        </button>
+
+        {/* Picture in Picture */}
+        <button
+          onClick={onTogglePiP}
+          className="p-4 rounded-xl transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white hidden sm:block"
+          title="Picture-in-Picture"
+        >
+          <PictureInPicture className="w-6 h-6" />
         </button>
 
         <div className="w-px h-8 bg-white/10 mx-2"></div>

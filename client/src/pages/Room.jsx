@@ -39,6 +39,21 @@ export default function Room() {
     navigate('/');
   };
 
+  const handleTogglePiP = async () => {
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else if (document.pictureInPictureEnabled) {
+        const videoElement = document.getElementById('main-video-player');
+        if (videoElement) {
+          await videoElement.requestPictureInPicture();
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle PiP:', error);
+    }
+  };
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-[#0f1115]">
@@ -77,6 +92,7 @@ export default function Room() {
         {/* Main Video (Takes up full space) */}
         <div className="absolute inset-0 z-0 bg-black">
           <VideoPlayer 
+            id="main-video-player"
             stream={isSwapped ? localStream : remoteStream} 
             isLocal={isSwapped} 
             label={isSwapped ? "You" : "Friend"}
@@ -110,6 +126,7 @@ export default function Room() {
         isVideoOn={isVideoOn}
         onToggleAudio={handleToggleAudio}
         onToggleVideo={handleToggleVideo}
+        onTogglePiP={handleTogglePiP}
         onEndCall={handleEndCall}
         roomId={roomId}
       />
