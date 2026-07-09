@@ -48,7 +48,7 @@ export default function VideoPlayer({ stream, isLocal, isMuted, isMicMuted, labe
       {/* Label and Status */}
       <div className={`absolute ${getLabelClasses()} flex items-center gap-2 z-10`}>
         <div className="bg-black/60 px-3 py-1.5 rounded-lg backdrop-blur-sm text-sm font-medium text-white shadow-sm flex items-center gap-2 border border-white/5">
-          <span>{label || (isLocal ? 'You' : 'Remote User')}</span>
+          <span>{label || (isLocal ? 'You' : 'Friend')}</span>
           {isMicMuted && (
             <span className="flex items-center gap-1 text-red-400 border-l border-white/10 pl-1.5 md:pl-2">
               <MicOff className="w-3.5 h-3.5 animate-pulse" />

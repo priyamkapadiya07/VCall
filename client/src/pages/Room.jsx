@@ -79,7 +79,7 @@ export default function Room() {
           <VideoPlayer 
             stream={isSwapped ? localStream : remoteStream} 
             isLocal={isSwapped} 
-            label={isSwapped ? "You" : "Remote User"}
+            label={isSwapped ? "You" : "Friend"}
             objectFit="contain"
             labelPosition="top-right"
             isMuted={isSwapped ? !isAudioOn : false}
@@ -98,7 +98,7 @@ export default function Room() {
             isLocal={!isSwapped} 
             isMuted={!isSwapped ? !isAudioOn : false}
             isMicMuted={isSwapped ? isRemoteMuted : !isAudioOn}
-            label={isSwapped ? "Remote User" : "You"}
+            label={isSwapped ? "Friend" : "You"}
             objectFit="cover"
           />
         </div>
