@@ -23,7 +23,7 @@ export default function VideoPlayer({ stream, isLocal, isMirrored = false, isMut
 
   if (!stream) {
     return (
-      <div className="w-full h-full bg-gray-900 rounded-2xl flex items-center justify-center relative overflow-hidden shadow-lg border border-white/5">
+      <div className="w-full h-full bg-gray-900 flex items-center justify-center relative overflow-hidden shadow-lg border border-white/5">
         <div className="w-24 h-24 rounded-full bg-gray-800 flex items-center justify-center animate-pulse">
           <User className="w-12 h-12 text-gray-600" />
         </div>
@@ -35,14 +35,15 @@ export default function VideoPlayer({ stream, isLocal, isMirrored = false, isMut
   }
 
   return (
-    <div className="w-full h-full relative group rounded-2xl overflow-hidden bg-black shadow-lg border border-white/5">
+    <div className="w-full h-full relative group rounded-xl overflow-hidden bg-black shadow-lg border border-white/5">
       <video
         id={id}
         ref={videoRef}
         autoPlay
         playsInline
         muted={isLocal || isMuted}
-        className={`w-full h-full ${isMirrored ? 'scale-x-[-1]' : ''}`}
+        draggable={false}
+        className={`w-full h-full pointer-events-none ${isMirrored ? 'scale-x-[-1]' : ''}`}
         style={{ objectFit: objectFit }}
       />
       

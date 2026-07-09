@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import Draggable from 'react-draggable';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoPlayer from '../components/VideoPlayer';
 import Controls from '../components/Controls';
@@ -28,6 +29,8 @@ export default function Room() {
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isSwapped, setIsSwapped] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const isDraggingRef = useRef(false);
+  const draggableRef = useRef(null);
 
   const handleToggleAudio = () => {
     const newState = toggleAudio();
@@ -120,22 +123,34 @@ export default function Room() {
         </div>
 
         {/* PIP Video (Picture-in-Picture style) */}
-        <div 
-          onClick={(e) => { e.stopPropagation(); setIsSwapped(!isSwapped); }}
-          className="absolute bottom-32 right-4 md:bottom-40 md:right-6 w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video z-10 transition-all hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20 cursor-pointer"
-          title="Click to swap videos"
+        <Draggable 
+          nodeRef={draggableRef}
+          onStart={() => { isDraggingRef.current = false; }}
+          onDrag={() => { isDraggingRef.current = true; }}
+          onStop={() => { setTimeout(() => { isDraggingRef.current = false; }, 50); }}
         >
-          <VideoPlayer 
-            id="pip-video-player"
-            stream={isSwapped ? remoteStream : localStream} 
-            isLocal={!isSwapped} 
-            isMirrored={!isSwapped && facingMode === 'user' && !isScreenSharing}
-            isMuted={!isSwapped ? !isAudioOn : false}
-            isMicMuted={isSwapped ? isRemoteMuted : !isAudioOn}
-            label={isSwapped ? "Friend" : "You"}
-            objectFit="cover"
-          />
-        </div>
+          <div ref={draggableRef} className={`absolute right-4 md:right-6 z-10 cursor-move transition-[bottom] duration-500 ease-in-out ${showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8'}`}>
+            <div 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (!isDraggingRef.current) setIsSwapped(!isSwapped); 
+              }}
+              className="w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video transition-transform hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20"
+              title="Drag to move, click to swap"
+            >
+              <VideoPlayer 
+                id="pip-video-player"
+                stream={isSwapped ? remoteStream : localStream} 
+                isLocal={!isSwapped} 
+                isMirrored={!isSwapped && facingMode === 'user' && !isScreenSharing}
+                isMuted={!isSwapped ? !isAudioOn : false}
+                isMicMuted={isSwapped ? isRemoteMuted : !isAudioOn}
+                label={isSwapped ? "Friend" : "You"}
+                objectFit="cover"
+              />
+            </div>
+          </div>
+        </Draggable>
       </div>
 
       {/* Bottom Controls */}
