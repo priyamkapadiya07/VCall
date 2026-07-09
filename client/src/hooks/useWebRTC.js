@@ -23,6 +23,7 @@ export default function useWebRTC(roomId) {
   const [remoteStream, setRemoteStream] = useState(null);
   const [error, setError] = useState(null);
   const [connectionState, setConnectionState] = useState('connecting'); // connecting, connected, disconnected
+  const [isRemoteMuted, setIsRemoteMuted] = useState(false);
   
   const peerConnectionRef = useRef(null);
   const remoteUserRef = useRef(null);
@@ -147,6 +148,17 @@ export default function useWebRTC(roomId) {
     socket.on('user-connected', async (userId) => {
       console.log('SIGNALING: User connected', userId);
       remoteUserRef.current = userId;
+      
+      // Send our current mute state to the newly connected user
+      if (streamRef.current) {
+        const audioTrack = streamRef.current.getAudioTracks()[0];
+        const isSelfMuted = audioTrack ? !audioTrack.enabled : false;
+        socket.emit('toggle-mute', {
+          to: userId,
+          isMuted: isSelfMuted
+        });
+      }
+
       const pc = createPeerConnection(userId);
       
       try {
@@ -167,6 +179,16 @@ export default function useWebRTC(roomId) {
       console.log('SIGNALING: Received offer from', data.from);
       remoteUserRef.current = data.from;
       
+      // Send our current mute state to the offerer
+      if (streamRef.current) {
+        const audioTrack = streamRef.current.getAudioTracks()[0];
+        const isSelfMuted = audioTrack ? !audioTrack.enabled : false;
+        socket.emit('toggle-mute', {
+          to: data.from,
+          isMuted: isSelfMuted
+        });
+      }
+
       if (peerConnectionRef.current) {
         console.log('SIGNALING: Closing existing peer connection before creating new one for offer');
         peerConnectionRef.current.close();
@@ -242,10 +264,17 @@ export default function useWebRTC(roomId) {
     socket.on('user-disconnected', () => {
       setConnectionState('disconnected');
       setRemoteStream(null);
+      setIsRemoteMuted(false);
       if (peerConnectionRef.current) {
         peerConnectionRef.current.close();
         peerConnectionRef.current = null;
       }
+    });
+
+    // When remote user toggles their mute state
+    socket.on('toggle-mute', (data) => {
+      console.log('SIGNALING: Remote mute state changed', data.isMuted);
+      setIsRemoteMuted(data.isMuted);
     });
 
     return () => {
@@ -255,6 +284,7 @@ export default function useWebRTC(roomId) {
       socket.off('answer');
       socket.off('ice-candidate');
       socket.off('user-disconnected');
+      socket.off('toggle-mute');
     };
   }, [createPeerConnection]);
 
@@ -263,6 +293,16 @@ export default function useWebRTC(roomId) {
       const audioTrack = localStream.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = !audioTrack.enabled;
+        console.log('MUTE_DEBUG: Local audio track enabled status changed to:', audioTrack.enabled, 'remoteUserRef:', remoteUserRef.current);
+        if (remoteUserRef.current) {
+          console.log('MUTE_DEBUG: Emitting toggle-mute to:', remoteUserRef.current, 'isMuted:', !audioTrack.enabled);
+          socket.emit('toggle-mute', {
+            to: remoteUserRef.current,
+            isMuted: !audioTrack.enabled
+          });
+        } else {
+          console.warn('MUTE_DEBUG: Cannot emit toggle-mute because remoteUserRef.current is null/undefined');
+        }
         return audioTrack.enabled;
       }
     }
@@ -294,6 +334,7 @@ export default function useWebRTC(roomId) {
     remoteStream,
     error,
     connectionState,
+    isRemoteMuted,
     toggleAudio,
     toggleVideo,
     stopMedia

@@ -55,6 +55,15 @@ const initializeSocket = (io) => {
       });
     });
 
+    socket.on('toggle-mute', (data) => {
+      console.log(`Server: relaying toggle-mute from ${socket.id} to ${data.to}: ${data.isMuted}`);
+      // Forward the mute status to the specific user
+      socket.to(data.to).emit('toggle-mute', {
+        from: socket.id,
+        isMuted: data.isMuted
+      });
+    });
+
     const handleDisconnect = () => {
       const roomId = socketRoomMap.get(socket.id);
       if (roomId) {

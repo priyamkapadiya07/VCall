@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoPlayer from '../components/VideoPlayer';
 import Controls from '../components/Controls';
@@ -14,6 +14,7 @@ export default function Room() {
     remoteStream, 
     error, 
     connectionState,
+    isRemoteMuted,
     toggleAudio,
     toggleVideo,
     stopMedia
@@ -69,6 +70,7 @@ export default function Room() {
         </div>
       </div>
 
+
       {/* Main Video Layout */}
       <div className="flex-1 w-full h-full relative">
         
@@ -81,6 +83,7 @@ export default function Room() {
             objectFit="contain"
             labelPosition="top-right"
             isMuted={isSwapped ? !isAudioOn : false}
+            isMicMuted={isSwapped ? !isAudioOn : isRemoteMuted}
           />
         </div>
 
@@ -94,6 +97,7 @@ export default function Room() {
             stream={isSwapped ? remoteStream : localStream} 
             isLocal={!isSwapped} 
             isMuted={!isSwapped ? !isAudioOn : false}
+            isMicMuted={isSwapped ? isRemoteMuted : !isAudioOn}
             label={isSwapped ? "Remote User" : "You"}
             objectFit="cover"
           />

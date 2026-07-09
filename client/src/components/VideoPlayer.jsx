@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { User, MicOff } from 'lucide-react';
 
-export default function VideoPlayer({ stream, isLocal, isMuted, label, objectFit = 'cover', labelPosition = 'bottom-left' }) {
+export default function VideoPlayer({ stream, isLocal, isMuted, isMicMuted, label, objectFit = 'cover', labelPosition = 'bottom-left' }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
@@ -19,6 +19,7 @@ export default function VideoPlayer({ stream, isLocal, isMuted, label, objectFit
       default: return 'bottom-4 left-4';
     }
   };
+
 
   if (!stream) {
     return (
@@ -45,9 +46,15 @@ export default function VideoPlayer({ stream, isLocal, isMuted, label, objectFit
       />
       
       {/* Label and Status */}
-      <div className={`absolute ${getLabelClasses()} flex items-center gap-2`}>
-        <div className="bg-black/60 px-3 py-1.5 rounded-lg backdrop-blur-sm text-sm font-medium text-white shadow-sm flex items-center gap-2">
-          {label || (isLocal ? 'You' : 'Remote User')}
+      <div className={`absolute ${getLabelClasses()} flex items-center gap-2 z-10`}>
+        <div className="bg-black/60 px-3 py-1.5 rounded-lg backdrop-blur-sm text-sm font-medium text-white shadow-sm flex items-center gap-2 border border-white/5">
+          <span>{label || (isLocal ? 'You' : 'Remote User')}</span>
+          {isMicMuted && (
+            <span className="flex items-center gap-1 text-red-400 border-l border-white/10 pl-1.5 md:pl-2">
+              <MicOff className="w-3.5 h-3.5 animate-pulse" />
+              {/* <span className="hidden sm:inline text-[10px] uppercase tracking-wider font-semibold">Muted</span> */}
+            </span>
+          )}
         </div>
       </div>
     </div>
