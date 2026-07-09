@@ -29,6 +29,7 @@ export default function useWebRTC(roomId) {
   const remoteUserRef = useRef(null);
   const pendingCandidatesRef = useRef([]);
   const streamRef = useRef(null);
+  const currentFacingMode = useRef('user');
 
   useEffect(() => {
     let mounted = true;
@@ -320,6 +321,63 @@ export default function useWebRTC(roomId) {
     return false;
   }, [localStream]);
 
+  const switchCamera = useCallback(async () => {
+    if (!localStream) return false;
+    
+    const newFacingMode = currentFacingMode.current === 'user' ? 'environment' : 'user';
+    let newStream;
+    
+    try {
+      newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: newFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      currentFacingMode.current = newFacingMode;
+    } catch (err) {
+      console.warn("Exact facingMode failed, trying without exact:", err);
+      try {
+        newStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: newFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        currentFacingMode.current = newFacingMode;
+      } catch (fallbackErr) {
+        console.error("Switch camera failed:", fallbackErr);
+        return false;
+      }
+    }
+
+    if (newStream) {
+      const newVideoTrack = newStream.getVideoTracks()[0];
+      const oldVideoTrack = localStream.getVideoTracks()[0];
+
+      // Replace track in peer connection
+      if (peerConnectionRef.current) {
+        const sender = peerConnectionRef.current.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender) {
+          sender.replaceTrack(newVideoTrack);
+        }
+      }
+
+      // Replace track in local stream
+      localStream.removeTrack(oldVideoTrack);
+      localStream.addTrack(newVideoTrack);
+      
+      // Keep track enabled state the same
+      newVideoTrack.enabled = oldVideoTrack.enabled;
+
+      // Stop old track
+      oldVideoTrack.stop();
+
+      // Update streamRef
+      streamRef.current = localStream;
+      
+      // Trigger a state update so components re-render with the new track
+      setLocalStream(new MediaStream(localStream.getTracks()));
+      
+      return true;
+    }
+    return false;
+  }, [localStream]);
+
   const stopMedia = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -337,6 +395,7 @@ export default function useWebRTC(roomId) {
     isRemoteMuted,
     toggleAudio,
     toggleVideo,
+    switchCamera,
     stopMedia
   };
 }

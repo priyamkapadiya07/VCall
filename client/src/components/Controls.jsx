@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mic, MicOff, Video, VideoOff, PictureInPicture, PhoneOff, Copy, Check } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PictureInPicture, PhoneOff, Copy, Check, SwitchCamera } from 'lucide-react';
 
 export default function Controls({ 
   isAudioOn, 
@@ -7,6 +7,7 @@ export default function Controls({
   onToggleAudio, 
   onToggleVideo, 
   onTogglePiP,
+  onSwitchCamera,
   onEndCall,
   roomId,
   showControls = true
@@ -59,6 +60,15 @@ export default function Controls({
           }`}
         >
           {isVideoOn ? <Video className="w-6 h-6" /> : <VideoOff className="w-6 h-6" />}
+        </button>
+
+        {/* Switch Camera */}
+        <button
+          onClick={onSwitchCamera}
+          className="p-4 rounded-xl transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
+          title="Switch Camera"
+        >
+          <SwitchCamera className="w-6 h-6" />
         </button>
 
         {/* Picture in Picture */}

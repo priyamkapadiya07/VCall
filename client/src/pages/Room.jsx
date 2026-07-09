@@ -17,6 +17,7 @@ export default function Room() {
     isRemoteMuted,
     toggleAudio,
     toggleVideo,
+    switchCamera,
     stopMedia
   } = useWebRTC(roomId);
 
@@ -131,6 +132,7 @@ export default function Room() {
         onToggleAudio={handleToggleAudio}
         onToggleVideo={handleToggleVideo}
         onTogglePiP={handleTogglePiP}
+        onSwitchCamera={switchCamera}
         onEndCall={handleEndCall}
         roomId={roomId}
         showControls={showControls}
