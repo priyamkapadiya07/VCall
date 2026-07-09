@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoPlayer from '../components/VideoPlayer';
@@ -31,6 +31,35 @@ export default function Room() {
   const [showControls, setShowControls] = useState(true);
   const isDraggingRef = useRef(false);
   const draggableRef = useRef(null);
+  const [pipBounds, setPipBounds] = useState({ left: -2000, top: -2000, right: 80, bottom: 80 });
+
+  useEffect(() => {
+    const updateBounds = () => {
+      if (draggableRef.current) {
+        const el = draggableRef.current;
+        const parent = el.offsetParent || document.body;
+        
+        // Calculate exact max travel distances to keep it strictly on-screen
+        const maxLeft = -el.offsetLeft;
+        const maxTop = -el.offsetTop;
+        const maxRight = parent.offsetWidth - (el.offsetLeft + el.offsetWidth);
+        const maxBottom = parent.offsetHeight - (el.offsetTop + el.offsetHeight);
+
+        setPipBounds({
+          left: maxLeft,
+          top: maxTop,
+          right: maxRight,
+          bottom: maxBottom
+        });
+      }
+    };
+
+    // Give it a tiny delay to allow CSS layout to settle initially
+    setTimeout(updateBounds, 100);
+    window.addEventListener('resize', updateBounds);
+    return () => window.removeEventListener('resize', updateBounds);
+  }, [showControls]); // Recalculate if CSS bottom class changes
+
 
   const handleToggleAudio = () => {
     const newState = toggleAudio();
@@ -125,11 +154,12 @@ export default function Room() {
         {/* PIP Video (Picture-in-Picture style) */}
         <Draggable 
           nodeRef={draggableRef}
+          bounds={pipBounds}
           onStart={() => { isDraggingRef.current = false; }}
           onDrag={() => { isDraggingRef.current = true; }}
           onStop={() => { setTimeout(() => { isDraggingRef.current = false; }, 50); }}
         >
-          <div ref={draggableRef} className={`absolute right-4 md:right-6 z-10 cursor-move transition-[bottom] duration-500 ease-in-out ${showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8'}`}>
+          <div ref={draggableRef} className={`absolute right-4 md:right-6 z-[100] cursor-move transition-[bottom] duration-500 ease-in-out ${showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8'}`}>
             <div 
               onClick={(e) => { 
                 e.stopPropagation(); 
