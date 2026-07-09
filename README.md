@@ -8,7 +8,11 @@ A temporary, modern one-to-one video calling web application built with the MERN
 - ⚡ Real-time signaling with Socket.IO
 - 🔒 No database, no accounts, completely anonymous
 - 🎨 Modern, responsive dark theme UI with Tailwind CSS
-- 📱 Mobile and desktop friendly
+- 🖥️ **Screen Sharing**: Native desktop screen sharing with seamless hot-swapping.
+- 🔄 **Smart Camera Switch**: Toggle between front and back mobile cameras with robust hardware fallbacks.
+- 📌 **Draggable Picture-in-Picture**: Custom PiP overlay that can be freely dragged anywhere on the screen with smart edge-clamping and auto-alignment.
+- 📶 **Network Optimization**: Auto-degrades video quality on poor connections to ensure audio remains crystal clear.
+- 📱 **Mobile & Native Feel**: Hideable controls, touch-friendly UI, and globally disabled text-selection/media-dragging for a true native app experience.
 
 ## Prerequisites
 
