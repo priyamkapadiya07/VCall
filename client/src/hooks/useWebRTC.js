@@ -24,11 +24,13 @@ export default function useWebRTC(roomId) {
   const [error, setError] = useState(null);
   const [connectionState, setConnectionState] = useState('connecting'); // connecting, connected, disconnected
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   
   const peerConnectionRef = useRef(null);
   const remoteUserRef = useRef(null);
   const pendingCandidatesRef = useRef([]);
   const streamRef = useRef(null);
+  const originalVideoTrackRef = useRef(null);
   const [facingMode, setFacingMode] = useState('user');
 
   useEffect(() => {
@@ -322,7 +324,7 @@ export default function useWebRTC(roomId) {
   }, [localStream]);
 
   const switchCamera = useCallback(async () => {
-    if (!localStream) return false;
+    if (!localStream || isScreenSharing) return false;
     
     // We use the functional update pattern or current state if we don't have a ref.
     // However, since switchCamera is in useCallback depending on localStream, facingMode might be stale if we don't include it in deps.
@@ -379,7 +381,58 @@ export default function useWebRTC(roomId) {
       return true;
     }
     return false;
-  }, [localStream, facingMode]);
+  }, [localStream, facingMode, isScreenSharing]);
+
+  const stopScreenShare = useCallback(() => {
+    if (!localStream) return;
+    const screenTrack = localStream.getVideoTracks()[0];
+    if (screenTrack) {
+      screenTrack.stop();
+      localStream.removeTrack(screenTrack);
+    }
+    if (originalVideoTrackRef.current) {
+      localStream.addTrack(originalVideoTrackRef.current);
+      if (peerConnectionRef.current) {
+        const sender = peerConnectionRef.current.getSenders().find(s => s.track && s.track.kind === 'video');
+        if (sender) sender.replaceTrack(originalVideoTrackRef.current);
+      }
+    }
+    setIsScreenSharing(false);
+    setLocalStream(new MediaStream(localStream.getTracks()));
+  }, [localStream]);
+
+  const toggleScreenShare = useCallback(async () => {
+    if (!localStream) return;
+
+    if (isScreenSharing) {
+      stopScreenShare();
+    } else {
+      try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const screenTrack = screenStream.getVideoTracks()[0];
+        const cameraTrack = localStream.getVideoTracks()[0];
+
+        originalVideoTrackRef.current = cameraTrack;
+
+        if (peerConnectionRef.current) {
+          const sender = peerConnectionRef.current.getSenders().find(s => s.track && s.track.kind === 'video');
+          if (sender) sender.replaceTrack(screenTrack);
+        }
+
+        localStream.removeTrack(cameraTrack);
+        localStream.addTrack(screenTrack);
+
+        screenTrack.onended = () => {
+          stopScreenShare();
+        };
+
+        setIsScreenSharing(true);
+        setLocalStream(new MediaStream(localStream.getTracks()));
+      } catch (err) {
+        console.error("Error sharing screen:", err);
+      }
+    }
+  }, [localStream, isScreenSharing, stopScreenShare]);
 
   const stopMedia = useCallback(() => {
     if (streamRef.current) {
@@ -396,10 +449,12 @@ export default function useWebRTC(roomId) {
     error,
     connectionState,
     isRemoteMuted,
+    isScreenSharing,
     facingMode,
     toggleAudio,
     toggleVideo,
     switchCamera,
+    toggleScreenShare,
     stopMedia
   };
 }

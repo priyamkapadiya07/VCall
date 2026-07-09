@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mic, MicOff, Video, VideoOff, PictureInPicture, PhoneOff, Copy, Check, SwitchCamera } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PictureInPicture, PhoneOff, Copy, Check, SwitchCamera, MonitorUp } from 'lucide-react';
 
 export default function Controls({ 
   isAudioOn, 
@@ -8,6 +8,8 @@ export default function Controls({
   onToggleVideo, 
   onTogglePiP,
   onSwitchCamera,
+  isScreenSharing,
+  onToggleScreenShare,
   onEndCall,
   roomId,
   showControls = true
@@ -69,6 +71,19 @@ export default function Controls({
           title="Switch Camera"
         >
           <SwitchCamera className="w-5 h-5 sm:w-6 sm:h-6" />
+        </button>
+
+        {/* Screen Share */}
+        <button
+          onClick={onToggleScreenShare}
+          className={`p-2.5 sm:p-4 rounded-xl transition-all cursor-pointer hidden sm:block ${
+            isScreenSharing 
+              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+              : 'bg-white/10 hover:bg-white/20 text-white'
+          }`}
+          title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
+        >
+          <MonitorUp className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
 
         {/* Picture in Picture */}

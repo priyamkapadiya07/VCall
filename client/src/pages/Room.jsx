@@ -15,10 +15,12 @@ export default function Room() {
     error, 
     connectionState,
     isRemoteMuted,
+    isScreenSharing,
     facingMode,
     toggleAudio,
     toggleVideo,
     switchCamera,
+    toggleScreenShare,
     stopMedia
   } = useWebRTC(roomId);
 
@@ -101,7 +103,7 @@ export default function Room() {
             id="main-video-player"
             stream={isSwapped ? localStream : remoteStream} 
             isLocal={isSwapped} 
-            isMirrored={isSwapped && facingMode === 'user'}
+            isMirrored={isSwapped && facingMode === 'user' && !isScreenSharing}
             label={isSwapped ? "You" : "Friend"}
             objectFit="contain"
             labelPosition="top-right"
@@ -119,7 +121,7 @@ export default function Room() {
           <VideoPlayer 
             stream={isSwapped ? remoteStream : localStream} 
             isLocal={!isSwapped} 
-            isMirrored={!isSwapped && facingMode === 'user'}
+            isMirrored={!isSwapped && facingMode === 'user' && !isScreenSharing}
             isMuted={!isSwapped ? !isAudioOn : false}
             isMicMuted={isSwapped ? isRemoteMuted : !isAudioOn}
             label={isSwapped ? "Friend" : "You"}
@@ -136,6 +138,8 @@ export default function Room() {
         onToggleVideo={handleToggleVideo}
         onTogglePiP={handleTogglePiP}
         onSwitchCamera={switchCamera}
+        onToggleScreenShare={toggleScreenShare}
+        isScreenSharing={isScreenSharing}
         onEndCall={handleEndCall}
         roomId={roomId}
         showControls={showControls}
