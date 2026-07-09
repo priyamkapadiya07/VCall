@@ -23,6 +23,7 @@ export default function Room() {
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isSwapped, setIsSwapped] = useState(false);
+  const [showControls, setShowControls] = useState(true);
 
   const handleToggleAudio = () => {
     const newState = toggleAudio();
@@ -75,7 +76,7 @@ export default function Room() {
     <div className="h-[100dvh] w-full bg-[#0f1115] relative overflow-hidden flex flex-col">
       
       {/* Top Bar Info */}
-      <div className="absolute top-4 left-4 md:top-6 md:left-6 z-20">
+      <div className={`absolute top-4 left-4 md:top-6 md:left-6 z-20 transition-all duration-500 ease-in-out ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-16 pointer-events-none'}`}>
         <div className="glass-panel px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3 text-sm md:text-base">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
           <span className="font-medium truncate max-w-[100px] sm:max-w-none">Room: {roomId}</span>
@@ -87,7 +88,10 @@ export default function Room() {
 
 
       {/* Main Video Layout */}
-      <div className="flex-1 w-full h-full relative">
+      <div 
+        className="flex-1 w-full h-full relative cursor-pointer"
+        onClick={() => setShowControls(prev => !prev)}
+      >
         
         {/* Main Video (Takes up full space) */}
         <div className="absolute inset-0 z-0 bg-black">
@@ -105,7 +109,7 @@ export default function Room() {
 
         {/* PIP Video (Picture-in-Picture style) */}
         <div 
-          onClick={() => setIsSwapped(!isSwapped)}
+          onClick={(e) => { e.stopPropagation(); setIsSwapped(!isSwapped); }}
           className="absolute bottom-32 right-4 md:bottom-40 md:right-6 w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video z-10 transition-all hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20 cursor-pointer"
           title="Click to swap videos"
         >
@@ -129,6 +133,7 @@ export default function Room() {
         onTogglePiP={handleTogglePiP}
         onEndCall={handleEndCall}
         roomId={roomId}
+        showControls={showControls}
       />
     </div>
   );

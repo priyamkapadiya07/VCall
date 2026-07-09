@@ -8,7 +8,8 @@ export default function Controls({
   onToggleVideo, 
   onTogglePiP,
   onEndCall,
-  roomId
+  roomId,
+  showControls = true
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -19,7 +20,7 @@ export default function Controls({
   };
 
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+    <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-500 ease-in-out z-30 ${showControls ? 'bottom-8 opacity-100' : '-bottom-32 opacity-0'}`}>
       <div className="glass-panel px-6 py-4 flex items-center gap-4 shadow-2xl">
         
         {/* Copy Link Button */}
