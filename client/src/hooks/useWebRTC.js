@@ -39,7 +39,11 @@ export default function useWebRTC(roomId) {
     const initWebRTC = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: { 
+            width: { ideal: 1280 }, 
+            height: { ideal: 720 },
+            frameRate: { ideal: 24, max: 30 }
+          },
           audio: {
             echoCancellation: true,
             noiseSuppression: true,
@@ -92,7 +96,22 @@ export default function useWebRTC(roomId) {
     // Add local tracks to peer connection
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => {
-        pc.addTrack(track, streamRef.current);
+        const sender = pc.addTrack(track, streamRef.current);
+        
+        // Optimize video track for dynamic network conditions
+        if (track.kind === 'video') {
+          try {
+            const parameters = sender.getParameters();
+            if (!parameters.encodings) {
+              parameters.encodings = [{}];
+            }
+            // Instruct WebRTC to degrade resolution (pixelate) instead of dropping frames/audio when network is poor
+            parameters.degradationPreference = 'maintain-framerate';
+            sender.setParameters(parameters);
+          } catch (e) {
+            console.warn("Could not set sender parameters", e);
+          }
+        }
       });
     }
 
@@ -334,19 +353,26 @@ export default function useWebRTC(roomId) {
     
     try {
       newStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: newFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } }
+        video: { facingMode: { exact: newFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 } }
       });
       setFacingMode(newFacingMode);
     } catch (err) {
       console.warn("Exact facingMode failed, trying without exact:", err);
       try {
         newStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: newFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
+          video: { facingMode: newFacingMode, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 } }
         });
         setFacingMode(newFacingMode);
       } catch (fallbackErr) {
-        console.error("Switch camera failed:", fallbackErr);
-        return false;
+        console.warn("Fallback facingMode failed, trying basic camera request:", fallbackErr);
+        try {
+          // Absolute fallback for devices that struggle with facingMode
+          newStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          setFacingMode(newFacingMode);
+        } catch (finalErr) {
+          console.error("All camera switch attempts failed:", finalErr);
+          return false;
+        }
       }
     }
 

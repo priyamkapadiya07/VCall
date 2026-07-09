@@ -49,8 +49,15 @@ export default function Room() {
       if (document.pictureInPictureElement) {
         await document.exitPictureInPicture();
       } else if (document.pictureInPictureEnabled) {
-        const videoElement = document.getElementById('main-video-player');
-        if (videoElement) {
+        let videoElement = document.getElementById('main-video-player');
+        
+        // Fallback: If main video isn't rendering a stream, grab the secondary (local) video
+        if (!videoElement) {
+          videoElement = document.getElementById('pip-video-player');
+        }
+
+        // Only request PiP if the element is actually a playing video
+        if (videoElement && videoElement.readyState >= 2) {
           await videoElement.requestPictureInPicture();
         }
       }
@@ -119,6 +126,7 @@ export default function Room() {
           title="Click to swap videos"
         >
           <VideoPlayer 
+            id="pip-video-player"
             stream={isSwapped ? remoteStream : localStream} 
             isLocal={!isSwapped} 
             isMirrored={!isSwapped && facingMode === 'user' && !isScreenSharing}
