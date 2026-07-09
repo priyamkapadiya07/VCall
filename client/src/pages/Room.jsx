@@ -32,6 +32,7 @@ export default function Room() {
   const isDraggingRef = useRef(false);
   const draggableRef = useRef(null);
   const [pipBounds, setPipBounds] = useState({ left: -2000, top: -2000, right: 80, bottom: 80 });
+  const [dragBaseClass, setDragBaseClass] = useState('');
 
   useEffect(() => {
     const updateBounds = () => {
@@ -58,7 +59,7 @@ export default function Room() {
     setTimeout(updateBounds, 100);
     window.addEventListener('resize', updateBounds);
     return () => window.removeEventListener('resize', updateBounds);
-  }, [showControls]); // Recalculate if CSS bottom class changes
+  }, [showControls, dragBaseClass]); // Recalculate if CSS bottom class changes or locks
 
 
   const handleToggleAudio = () => {
@@ -155,11 +156,16 @@ export default function Room() {
         <Draggable 
           nodeRef={draggableRef}
           bounds={pipBounds}
-          onStart={() => { isDraggingRef.current = false; }}
+          onStart={() => { 
+            isDraggingRef.current = false; 
+            if (!dragBaseClass) {
+              setDragBaseClass(showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8');
+            }
+          }}
           onDrag={() => { isDraggingRef.current = true; }}
           onStop={() => { setTimeout(() => { isDraggingRef.current = false; }, 50); }}
         >
-          <div ref={draggableRef} className={`absolute right-4 md:right-6 z-[100] cursor-move transition-[bottom] duration-500 ease-in-out ${showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8'}`}>
+          <div ref={draggableRef} className={`absolute right-4 md:right-6 z-[100] cursor-move transition-[bottom] duration-500 ease-in-out ${dragBaseClass || (showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8')}`}>
             <div 
               onClick={(e) => { 
                 e.stopPropagation(); 
