@@ -16,6 +16,10 @@ export default function Controls({
 }) {
   const [copied, setCopied] = useState(false);
 
+  // Feature detection
+  const canScreenShare = typeof navigator !== 'undefined' && navigator.mediaDevices && typeof navigator.mediaDevices.getDisplayMedia === 'function';
+  const canPiP = typeof document !== 'undefined' && document.pictureInPictureEnabled;
+
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
@@ -74,26 +78,30 @@ export default function Controls({
         </button>
 
         {/* Screen Share */}
-        <button
-          onClick={onToggleScreenShare}
-          className={`p-2.5 sm:p-4 rounded-xl transition-all cursor-pointer hidden sm:block ${
-            isScreenSharing 
-              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
-              : 'bg-white/10 hover:bg-white/20 text-white'
-          }`}
-          title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
-        >
-          <MonitorUp className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
+        {canScreenShare && (
+          <button
+            onClick={onToggleScreenShare}
+            className={`p-2.5 sm:p-4 rounded-xl transition-all cursor-pointer ${
+              isScreenSharing 
+                ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+                : 'bg-white/10 hover:bg-white/20 text-white'
+            }`}
+            title={isScreenSharing ? "Stop Sharing" : "Share Screen"}
+          >
+            <MonitorUp className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+        )}
 
         {/* Picture in Picture */}
-        <button
-          onClick={onTogglePiP}
-          className="p-2.5 sm:p-4 rounded-xl transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white hidden sm:block"
-          title="Picture-in-Picture"
-        >
-          <PictureInPicture className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
+        {canPiP && (
+          <button
+            onClick={onTogglePiP}
+            className="p-2.5 sm:p-4 rounded-xl transition-all cursor-pointer bg-white/10 hover:bg-white/20 text-white"
+            title="Picture-in-Picture"
+          >
+            <PictureInPicture className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+        )}
 
         <div className="w-px h-6 sm:h-8 bg-white/10 mx-1 sm:mx-2"></div>
 
