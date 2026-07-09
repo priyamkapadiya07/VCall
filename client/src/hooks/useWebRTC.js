@@ -29,7 +29,7 @@ export default function useWebRTC(roomId) {
   const remoteUserRef = useRef(null);
   const pendingCandidatesRef = useRef([]);
   const streamRef = useRef(null);
-  const currentFacingMode = useRef('user');
+  const [facingMode, setFacingMode] = useState('user');
 
   useEffect(() => {
     let mounted = true;
@@ -324,21 +324,24 @@ export default function useWebRTC(roomId) {
   const switchCamera = useCallback(async () => {
     if (!localStream) return false;
     
-    const newFacingMode = currentFacingMode.current === 'user' ? 'environment' : 'user';
+    // We use the functional update pattern or current state if we don't have a ref.
+    // However, since switchCamera is in useCallback depending on localStream, facingMode might be stale if we don't include it in deps.
+    // Let's add facingMode to the useCallback dependency array.
+    const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
     let newStream;
     
     try {
       newStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { exact: newFacingMode }, width: { ideal: 1280 }, height: { ideal: 720 } }
       });
-      currentFacingMode.current = newFacingMode;
+      setFacingMode(newFacingMode);
     } catch (err) {
       console.warn("Exact facingMode failed, trying without exact:", err);
       try {
         newStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: newFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
         });
-        currentFacingMode.current = newFacingMode;
+        setFacingMode(newFacingMode);
       } catch (fallbackErr) {
         console.error("Switch camera failed:", fallbackErr);
         return false;
@@ -376,7 +379,7 @@ export default function useWebRTC(roomId) {
       return true;
     }
     return false;
-  }, [localStream]);
+  }, [localStream, facingMode]);
 
   const stopMedia = useCallback(() => {
     if (streamRef.current) {
@@ -393,6 +396,7 @@ export default function useWebRTC(roomId) {
     error,
     connectionState,
     isRemoteMuted,
+    facingMode,
     toggleAudio,
     toggleVideo,
     switchCamera,
