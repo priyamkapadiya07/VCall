@@ -30,6 +30,7 @@ export default function Room() {
   const [isSwapped, setIsSwapped] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const isDraggingRef = useRef(false);
+  const dragStartPosRef = useRef({ x: 0, y: 0 });
   const draggableRef = useRef(null);
   const [pipBounds, setPipBounds] = useState({ left: -2000, top: -2000, right: 80, bottom: 80 });
   const [dragBaseClass, setDragBaseClass] = useState('');
@@ -156,16 +157,23 @@ export default function Room() {
         <Draggable 
           nodeRef={draggableRef}
           bounds={pipBounds}
-          onStart={() => { 
+          onStart={(e, data) => { 
+            dragStartPosRef.current = { x: data.x, y: data.y };
             isDraggingRef.current = false; 
             if (!dragBaseClass) {
               setDragBaseClass(showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8');
             }
           }}
-          onDrag={() => { isDraggingRef.current = true; }}
+          onDrag={(e, data) => { 
+            const dx = Math.abs(data.x - dragStartPosRef.current.x);
+            const dy = Math.abs(data.y - dragStartPosRef.current.y);
+            if (dx > 5 || dy > 5) {
+              isDraggingRef.current = true; 
+            }
+          }}
           onStop={() => { setTimeout(() => { isDraggingRef.current = false; }, 50); }}
         >
-          <div ref={draggableRef} className={`absolute right-4 md:right-6 z-[100] cursor-move transition-[bottom] duration-500 ease-in-out ${dragBaseClass || (showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8')}`}>
+          <div ref={draggableRef} style={{ touchAction: 'none' }} className={`absolute right-4 md:right-6 z-[100] cursor-move transition-[bottom] duration-500 ease-in-out ${dragBaseClass || (showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8')}`}>
             <div 
               onClick={(e) => { 
                 e.stopPropagation(); 
