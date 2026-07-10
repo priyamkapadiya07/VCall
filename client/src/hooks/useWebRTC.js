@@ -117,6 +117,7 @@ export default function useWebRTC(roomId) {
 
     // Handle remote tracks
     pc.ontrack = (event) => {
+      if (peerConnectionRef.current !== pc) return;
       setRemoteStream((prevStream) => {
         if (prevStream) {
           const newTracks = prevStream.getTracks();
@@ -131,6 +132,7 @@ export default function useWebRTC(roomId) {
 
     // Handle ICE candidates
     pc.onicecandidate = (event) => {
+      if (peerConnectionRef.current !== pc) return;
       if (event.candidate) {
         socket.emit('ice-candidate', {
           to: remoteSocketId,
@@ -140,6 +142,7 @@ export default function useWebRTC(roomId) {
     };
 
     pc.onconnectionstatechange = () => {
+      if (peerConnectionRef.current !== pc) return;
       if (pc.connectionState === 'connected') {
         setConnectionState('connected');
       } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
@@ -149,6 +152,7 @@ export default function useWebRTC(roomId) {
     };
 
     pc.oniceconnectionstatechange = () => {
+      if (peerConnectionRef.current !== pc) return;
       if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
         setConnectionState('connected');
       } else if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
