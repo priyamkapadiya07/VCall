@@ -118,16 +118,15 @@ export default function useWebRTC(roomId) {
     // Handle remote tracks
     pc.ontrack = (event) => {
       if (peerConnectionRef.current !== pc) return;
-      setRemoteStream((prevStream) => {
-        if (prevStream) {
-          const newTracks = prevStream.getTracks();
-          if (!newTracks.some(t => t.id === event.track.id)) {
-            newTracks.push(event.track);
-          }
-          return new MediaStream(newTracks);
-        }
-        return new MediaStream([event.track]);
-      });
+      if (event.streams && event.streams[0]) {
+        setRemoteStream(event.streams[0]);
+      } else {
+        // Fallback for older browsers
+        setRemoteStream((prevStream) => {
+          if (prevStream) return prevStream;
+          return new MediaStream([event.track]);
+        });
+      }
     };
 
     // Handle ICE candidates
