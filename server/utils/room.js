@@ -9,7 +9,7 @@ const joinRoom = (roomId, socketId) => {
   
   const room = rooms.get(roomId);
   
-  if (room.size >= 2) {
+  if (room.size >= 4) {
     return { error: 'Room is full' };
   }
   
