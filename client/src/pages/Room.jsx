@@ -4,7 +4,8 @@ import Draggable from 'react-draggable';
 import useWebRTC from '../hooks/useWebRTC';
 import VideoPlayer from '../components/VideoPlayer';
 import Controls from '../components/Controls';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Mic, Video } from 'lucide-react';
+import { saveRecording } from '../utils/indexedDB';
 
 export default function Room() {
   const { id: roomId } = useParams();
@@ -35,6 +36,99 @@ export default function Room() {
   const draggableRef = useRef(null);
   const [pipBounds, setPipBounds] = useState({ left: -2000, top: -2000, right: 80, bottom: 80 });
   const [dragBaseClass, setDragBaseClass] = useState('');
+
+  const [showRecordPrompt, setShowRecordPrompt] = useState(false);
+  const [showStopPrompt, setShowStopPrompt] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const recordingTypeRef = useRef('audio');
+  const recordingTimeRef = useRef(0);
+
+  useEffect(() => {
+    let interval;
+    if (isRecording) {
+      interval = setInterval(() => {
+        setRecordingTime((prev) => {
+          const newTime = prev + 1;
+          recordingTimeRef.current = newTime;
+          return newTime;
+        });
+      }, 1000);
+    } else {
+      setRecordingTime(0);
+    }
+    return () => clearInterval(interval);
+  }, [isRecording]);
+
+  const startRecording = async (type) => {
+    setShowRecordPrompt(false);
+    recordingTypeRef.current = type;
+    recordedChunksRef.current = [];
+    recordingTimeRef.current = 0;
+
+    let audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let destination = audioContext.createMediaStreamDestination();
+
+    if (localStream && localStream.getAudioTracks().length > 0) {
+      let localSource = audioContext.createMediaStreamSource(new MediaStream([localStream.getAudioTracks()[0]]));
+      localSource.connect(destination);
+    }
+    
+    if (remoteStream && remoteStream.getAudioTracks().length > 0) {
+      let remoteSource = audioContext.createMediaStreamSource(new MediaStream([remoteStream.getAudioTracks()[0]]));
+      remoteSource.connect(destination);
+    }
+
+    let finalStream = new MediaStream(destination.stream.getTracks());
+
+    if (type === 'video' && remoteStream && remoteStream.getVideoTracks().length > 0) {
+      finalStream.addTrack(remoteStream.getVideoTracks()[0]);
+    }
+
+    try {
+      const mimeType = type === 'video' ? 'video/webm;codecs=vp8,opus' : 'audio/webm;codecs=opus';
+      const options = MediaRecorder.isTypeSupported(mimeType) ? { mimeType } : {};
+      
+      const mediaRecorder = new MediaRecorder(finalStream, options);
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordedChunksRef.current, { type: mediaRecorder.mimeType });
+        const metadata = {
+          roomId,
+          type: recordingTypeRef.current,
+          timestamp: new Date().toISOString(),
+          duration: recordingTimeRef.current,
+          size: blob.size,
+          blob
+        };
+        await saveRecording(metadata);
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error starting recording:", err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+    setShowStopPrompt(false);
+  };
+
 
   useEffect(() => {
     const updateBounds = () => {
@@ -75,6 +169,9 @@ export default function Room() {
   };
 
   const handleEndCall = () => {
+    if (isRecording) {
+      stopRecording();
+    }
     stopMedia();
     navigate('/');
   };
@@ -121,6 +218,60 @@ export default function Room() {
   return (
     <div className="h-[100dvh] w-full bg-[#0f1115] relative overflow-hidden flex flex-col">
       
+      {showRecordPrompt && (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="glass-panel p-6 max-w-sm w-full mx-4">
+            <h3 className="text-xl font-bold mb-4 text-white">Start Recording</h3>
+            <p className="text-gray-300 mb-6 text-sm">Choose what you want to record. The recording will be saved locally.</p>
+            <div className="flex gap-4">
+              <button 
+                className="flex-1 btn btn-secondary py-3 flex flex-col items-center justify-center gap-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all"
+                onClick={() => startRecording('audio')}
+              >
+                <Mic className="w-6 h-6" />
+                Audio Only
+              </button>
+              <button 
+                className="flex-1 btn btn-secondary py-3 flex flex-col items-center justify-center gap-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all "
+                onClick={() => startRecording('video')}
+              >
+                <Video className="w-6 h-6" />
+                Audio & Video
+              </button>
+            </div>
+            <button 
+              className="mt-4 w-full text-gray-400 hover:text-white py-2 text-sm transition-colors"
+              onClick={() => setShowRecordPrompt(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showStopPrompt && (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="glass-panel p-6 max-w-sm w-full mx-4 text-center">
+            <h3 className="text-xl font-bold mb-4 text-white">Stop Recording?</h3>
+            <p className="text-gray-300 mb-6 text-sm">Are you sure you want to stop the recording?</p>
+            <div className="flex gap-4">
+              <button 
+                className="flex-1 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                onClick={() => setShowStopPrompt(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors shadow-lg shadow-red-600/20"
+                onClick={stopRecording}
+              >
+                Stop & Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Bar Info */}
       <div className={`absolute top-4 left-4 md:top-6 md:left-6 z-20 transition-all duration-500 ease-in-out ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-16 pointer-events-none'}`}>
         <div className="glass-panel px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3 text-sm md:text-base">
@@ -130,6 +281,19 @@ export default function Room() {
             {connectionState}
           </span>
         </div>
+        {isRecording && (
+          <div 
+            className="mt-2 text-red-500 flex items-center gap-2 cursor-pointer w-max ml-1"
+            onClick={() => setShowStopPrompt(true)}
+            title="Click to stop recording"
+          >
+            <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+            <span className="font-mono text-sm drop-shadow-md">
+              {String(Math.floor(recordingTime / 60)).padStart(2, '0')}:
+              {String(recordingTime % 60).padStart(2, '0')}
+            </span>
+          </div>
+        )}
       </div>
 
 
@@ -217,6 +381,7 @@ export default function Room() {
         onEndCall={handleEndCall}
         roomId={roomId}
         showControls={showControls}
+        onStartRecordingReq={() => setShowRecordPrompt(true)}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Mic, MicOff, Video, VideoOff, PictureInPicture, PhoneOff, Copy, Check, SwitchCamera, MonitorUp } from 'lucide-react';
 
 export default function Controls({ 
@@ -12,7 +12,8 @@ export default function Controls({
   onToggleScreenShare,
   onEndCall,
   roomId,
-  showControls = true
+  showControls = true,
+  onStartRecordingReq
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -26,6 +27,25 @@ export default function Controls({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const pressTimer = useRef(null);
+
+  const handleTouchStart = (e) => {
+    pressTimer.current = setTimeout(() => {
+      onStartRecordingReq?.();
+    }, 800); // 800ms for long press
+  };
+
+  const handleTouchEnd = (e) => {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+    }
+  };
+
+  const handleContextMenu = (e) => {
+    e.preventDefault(); // Prevent default right click menu
+    onStartRecordingReq?.();
+  };
+
   return (
     <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-500 ease-in-out z-30 w-[95vw] sm:w-auto max-w-fit flex justify-center ${showControls ? 'bottom-6 sm:bottom-8 opacity-100' : '-bottom-32 opacity-0'}`}>
       <div className="glass-panel px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-center gap-1.5 sm:gap-4 shadow-2xl">
@@ -33,6 +53,9 @@ export default function Controls({
         {/* Copy Link Button */}
         <button
           onClick={copyLink}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onContextMenu={handleContextMenu}
           className="p-2.5 sm:p-4 rounded-xl bg-white/5 hover:bg-white/10 text-gray-300 transition-all flex items-center gap-2 group relative cursor-pointer"
           title="Copy invite link"
         >
