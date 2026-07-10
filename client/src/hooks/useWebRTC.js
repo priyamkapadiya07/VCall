@@ -169,6 +169,10 @@ export default function useWebRTC(roomId) {
     // When another user joins
     socket.on('user-connected', async (userId) => {
       console.log('SIGNALING: User connected', userId);
+      if (peerConnectionRef.current) {
+        console.log('SIGNALING: Closing existing peer connection before creating new one for new user');
+        peerConnectionRef.current.close();
+      }
       remoteUserRef.current = userId;
       
       // Send our current mute state to the newly connected user
@@ -283,13 +287,17 @@ export default function useWebRTC(roomId) {
     });
 
     // When remote user disconnects
-    socket.on('user-disconnected', () => {
-      setConnectionState('disconnected');
-      setRemoteStream(null);
-      setIsRemoteMuted(false);
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-        peerConnectionRef.current = null;
+    socket.on('user-disconnected', (disconnectedUserId) => {
+      console.log('SIGNALING: User disconnected', disconnectedUserId);
+      if (remoteUserRef.current === disconnectedUserId || !remoteUserRef.current) {
+        setConnectionState('disconnected');
+        setRemoteStream(null);
+        setIsRemoteMuted(false);
+        if (peerConnectionRef.current) {
+          peerConnectionRef.current.close();
+          peerConnectionRef.current = null;
+        }
+        remoteUserRef.current = null;
       }
     });
 
