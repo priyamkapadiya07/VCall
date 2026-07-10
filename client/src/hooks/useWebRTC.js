@@ -119,9 +119,11 @@ export default function useWebRTC(roomId) {
     pc.ontrack = (event) => {
       setRemoteStream((prevStream) => {
         if (prevStream) {
-          const hasTrack = prevStream.getTracks().some(t => t.id === event.track.id);
-          if (!hasTrack) prevStream.addTrack(event.track);
-          return prevStream;
+          const newTracks = prevStream.getTracks();
+          if (!newTracks.some(t => t.id === event.track.id)) {
+            newTracks.push(event.track);
+          }
+          return new MediaStream(newTracks);
         }
         return new MediaStream([event.track]);
       });
@@ -172,6 +174,7 @@ export default function useWebRTC(roomId) {
       if (peerConnectionRef.current) {
         console.log('SIGNALING: Closing existing peer connection before creating new one for new user');
         peerConnectionRef.current.close();
+        setRemoteStream(null);
       }
       remoteUserRef.current = userId;
       
@@ -218,6 +221,7 @@ export default function useWebRTC(roomId) {
       if (peerConnectionRef.current) {
         console.log('SIGNALING: Closing existing peer connection before creating new one for offer');
         peerConnectionRef.current.close();
+        setRemoteStream(null);
       }
 
       const pc = createPeerConnection(data.from);
