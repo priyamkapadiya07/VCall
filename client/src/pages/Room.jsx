@@ -135,7 +135,10 @@ export default function Room() {
       {/* Main Video Layout */}
       <div 
         className="flex-1 w-full h-full relative cursor-pointer"
-        onClick={() => setShowControls(prev => !prev)}
+        onClick={(e) => {
+          if (e.target.closest('.pip-container')) return;
+          setShowControls(prev => !prev);
+        }}
       >
         
         {/* Main Video (Takes up full space) */}
@@ -171,14 +174,15 @@ export default function Room() {
               isDraggingRef.current = true; 
             }
           }}
-          onStop={() => { setTimeout(() => { isDraggingRef.current = false; }, 50); }}
+          onStop={(e, data) => { 
+            if (!isDraggingRef.current) {
+              setIsSwapped(prev => !prev);
+            }
+            setTimeout(() => { isDraggingRef.current = false; }, 50); 
+          }}
         >
-          <div ref={draggableRef} style={{ touchAction: 'none' }} className={`absolute right-4 md:right-6 z-[100] cursor-move transition-[bottom] duration-500 ease-in-out ${dragBaseClass || (showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8')}`}>
+          <div ref={draggableRef} style={{ touchAction: 'none' }} className={`pip-container absolute right-4 md:right-6 z-[100] cursor-move transition-[bottom] duration-500 ease-in-out ${dragBaseClass || (showControls ? 'bottom-32 md:bottom-40' : 'bottom-6 md:bottom-8')}`}>
             <div 
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                if (!isDraggingRef.current) setIsSwapped(!isSwapped); 
-              }}
               className="w-28 sm:w-36 md:w-48 lg:w-64 aspect-[3/4] md:aspect-video transition-transform hover:scale-105 duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/20"
               title="Drag to move, click to swap"
             >
