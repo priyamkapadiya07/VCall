@@ -16,6 +16,7 @@ export default function Room() {
     error, 
     connectionState,
     isRemoteMuted,
+    isRemoteVideoOff,
     isScreenSharing,
     facingMode,
     toggleAudio,
@@ -151,6 +152,7 @@ export default function Room() {
             label={isSwapped ? "You" : "Friend"}
             objectFit="contain"
             labelPosition="top-right"
+            isVideoOff={isSwapped ? !isVideoOn : isRemoteVideoOff}
             isMuted={isSwapped ? !isAudioOn : false}
             isMicMuted={isSwapped ? !isAudioOn : isRemoteMuted}
           />
@@ -191,6 +193,7 @@ export default function Room() {
                 stream={isSwapped ? remoteStream : localStream} 
                 isLocal={!isSwapped} 
                 isMirrored={!isSwapped && facingMode === 'user' && !isScreenSharing}
+                isVideoOff={!isSwapped ? !isVideoOn : isRemoteVideoOff}
                 isMuted={!isSwapped ? !isAudioOn : false}
                 isMicMuted={isSwapped ? isRemoteMuted : !isAudioOn}
                 label={isSwapped ? "Friend" : "You"}

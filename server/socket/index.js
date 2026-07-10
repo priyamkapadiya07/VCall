@@ -64,6 +64,14 @@ const initializeSocket = (io) => {
       });
     });
 
+    socket.on('toggle-video', (data) => {
+      console.log(`Server: relaying toggle-video from ${socket.id} to ${data.to}: ${data.isVideoOff}`);
+      socket.to(data.to).emit('toggle-video', {
+        from: socket.id,
+        isVideoOff: data.isVideoOff
+      });
+    });
+
     const handleDisconnect = () => {
       const roomId = socketRoomMap.get(socket.id);
       if (roomId) {

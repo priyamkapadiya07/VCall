@@ -24,6 +24,7 @@ export default function useWebRTC(roomId) {
   const [error, setError] = useState(null);
   const [connectionState, setConnectionState] = useState('connecting'); // connecting, connected, disconnected
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
+  const [isRemoteVideoOff, setIsRemoteVideoOff] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   
   const peerConnectionRef = useRef(null);
@@ -181,13 +182,21 @@ export default function useWebRTC(roomId) {
       }
       remoteUserRef.current = userId;
       
-      // Send our current mute state to the newly connected user
+      // Send our current mute and video state to the newly connected user
       if (streamRef.current) {
         const audioTrack = streamRef.current.getAudioTracks()[0];
+        const videoTrack = streamRef.current.getVideoTracks()[0];
         const isSelfMuted = audioTrack ? !audioTrack.enabled : false;
+        const isSelfVideoOff = videoTrack ? !videoTrack.enabled : false;
+        
         socket.emit('toggle-mute', {
           to: userId,
           isMuted: isSelfMuted
+        });
+        
+        socket.emit('toggle-video', {
+          to: userId,
+          isVideoOff: isSelfVideoOff
         });
       }
 
@@ -211,13 +220,21 @@ export default function useWebRTC(roomId) {
       console.log('SIGNALING: Received offer from', data.from);
       remoteUserRef.current = data.from;
       
-      // Send our current mute state to the offerer
+      // Send our current mute and video state to the offerer
       if (streamRef.current) {
         const audioTrack = streamRef.current.getAudioTracks()[0];
+        const videoTrack = streamRef.current.getVideoTracks()[0];
         const isSelfMuted = audioTrack ? !audioTrack.enabled : false;
+        const isSelfVideoOff = videoTrack ? !videoTrack.enabled : false;
+        
         socket.emit('toggle-mute', {
           to: data.from,
           isMuted: isSelfMuted
+        });
+        
+        socket.emit('toggle-video', {
+          to: data.from,
+          isVideoOff: isSelfVideoOff
         });
       }
 
@@ -300,6 +317,7 @@ export default function useWebRTC(roomId) {
         setConnectionState('disconnected');
         setRemoteStream(null);
         setIsRemoteMuted(false);
+        setIsRemoteVideoOff(false);
         if (peerConnectionRef.current) {
           peerConnectionRef.current.close();
           peerConnectionRef.current = null;
@@ -314,6 +332,12 @@ export default function useWebRTC(roomId) {
       setIsRemoteMuted(data.isMuted);
     });
 
+    // When remote user toggles their video state
+    socket.on('toggle-video', (data) => {
+      console.log('SIGNALING: Remote video state changed', data.isVideoOff);
+      setIsRemoteVideoOff(data.isVideoOff);
+    });
+
     return () => {
       socket.off('room-full');
       socket.off('user-connected');
@@ -322,6 +346,7 @@ export default function useWebRTC(roomId) {
       socket.off('ice-candidate');
       socket.off('user-disconnected');
       socket.off('toggle-mute');
+      socket.off('toggle-video');
     };
   }, [createPeerConnection]);
 
@@ -351,6 +376,12 @@ export default function useWebRTC(roomId) {
       const videoTrack = localStream.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = !videoTrack.enabled;
+        if (remoteUserRef.current) {
+          socket.emit('toggle-video', {
+            to: remoteUserRef.current,
+            isVideoOff: !videoTrack.enabled
+          });
+        }
         return videoTrack.enabled;
       }
     }
@@ -490,6 +521,7 @@ export default function useWebRTC(roomId) {
     error,
     connectionState,
     isRemoteMuted,
+    isRemoteVideoOff,
     isScreenSharing,
     facingMode,
     toggleAudio,
