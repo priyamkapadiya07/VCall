@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { User, MicOff } from 'lucide-react';
+import { User, MicOff, CameraOff } from 'lucide-react';
 
 export default function VideoPlayer({ stream, isLocal, isMirrored = false, isMuted, isMicMuted, isVideoOff, label, objectFit = 'cover', labelPosition = 'bottom-left', id }) {
   const videoRef = useRef(null);
@@ -28,7 +28,12 @@ export default function VideoPlayer({ stream, isLocal, isMirrored = false, isMut
           <User className="w-12 h-12 text-gray-600" />
         </div>
         <div className={`absolute ${getLabelClasses()} text-sm text-white/90`}>
-          {stream ? `${label || (isLocal ? 'You' : 'Friend')} (Camera Off)` : 'Waiting...'}
+          {stream ? (
+            <span className="flex items-center gap-2">
+              {label || (isLocal ? 'You' : 'Friend')} 
+              <CameraOff className="w-4 h-4 text-gray-400" />
+            </span>
+          ) : 'Waiting...'}
         </div>
       </div>
     );
