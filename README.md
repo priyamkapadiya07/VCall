@@ -1,25 +1,39 @@
-# One-to-One Video Calling Web Application
+# VCall: Premium Peer-to-Peer Video Calling
 
-A temporary, modern one-to-one video calling web application built with the MERN stack (React, Node.js, Express, Socket.IO, WebRTC). This application focuses on simplicity and privacy—no database is used, and user information is never stored. Rooms exist only while users are connected.
+A completely private, secure, and modern one-to-one video calling web application built with the MERN stack (React, Node.js, Express, Socket.IO, WebRTC). This application focuses on simplicity and privacy—no database is used for the core application, and user information is never stored.
 
-## Features
+## ✨ Core Features
 
-- 🎥 High-quality WebRTC video and audio
-- ⚡ Real-time signaling with Socket.IO
-- 🔒 No database, no accounts, completely anonymous
-- 🎨 Modern, responsive dark theme UI with Tailwind CSS
-- 🖥️ **Screen Sharing**: Native desktop screen sharing with seamless hot-swapping.
-- 🔄 **Smart Camera Switch**: Toggle between front and back mobile cameras with robust hardware fallbacks.
-- 📌 **Draggable Picture-in-Picture**: Custom PiP overlay that can be freely dragged anywhere on the screen with smart edge-clamping and auto-alignment.
-- 📶 **Network Optimization**: Auto-degrades video quality on poor connections to ensure audio remains crystal clear.
-- 📱 **Mobile & Native Feel**: Hideable controls, touch-friendly UI, and globally disabled text-selection/media-dragging for a true native app experience.
+- **🎥 High-Quality WebRTC:** Crystal clear, peer-to-peer video and audio streams.
+- **⚡ Real-Time Signaling:** Lightning-fast connection establishment via Socket.IO.
+- **🔒 Secure & Private:** No database, no accounts, completely anonymous. Rooms exist only while users are connected.
+- **🖥️ Screen Sharing:** Native desktop screen sharing with seamless hot-swapping between camera and screen.
+- **🔄 Smart Camera Switch:** Toggle between front and back mobile cameras with robust hardware fallbacks.
+- **📌 Draggable Picture-in-Picture:** Custom PiP overlay that can be freely dragged anywhere on the screen with smart edge-clamping.
+- **📱 Native Mobile App Feel:** Hideable controls, disabled pull-to-refresh on calls, disabled zooming, and touch-friendly UI.
 
-## Prerequisites
+## 🔴 Local Call Recording (New!)
 
-- Node.js (v18 or higher)
-- npm or yarn
+VCall now supports secure, fully local call recording! Your recordings are never uploaded to a server—they are saved directly to your browser's IndexedDB.
 
-## Local Development Setup
+- **Audio Only or Video & Audio:** Choose what you want to capture before starting.
+- **Pulsing Indicator:** A sleek recording timer and red dot appears so you know exactly when you're recording.
+- **Local Storage Management:** Preview your recordings in a built-in media player, download them as `.webm` files directly to your device, or delete them when you're done.
+
+### How to Access the Recordings Page (Easter Egg) 🕵️‍♂️
+Because privacy is our priority, the `/record` dashboard is completely hidden from the main UI. To access it:
+- **On Desktop:** Go to the Home Page and **Triple-Click (3 times fast)** on the "Secure & Private" icon/text.
+- **On Mobile:** Go to the Home Page and **Long-Press (1 second)** on the "Secure & Private" icon/text.
+*(Alternatively, you can just type `/record` into your browser's address bar).*
+
+## 📲 Progressive Web App (PWA)
+
+VCall is fully configured as a Progressive Web App. You can install it directly onto your Desktop, Android, or iOS device!
+- **Offline Access:** Once installed, you can open the app and view your saved recordings locally even without an internet connection.
+- **Native Experience:** Runs in standalone mode without a browser address bar, completely preventing accidental zooms or pull-to-refreshes.
+- **How to Install:** Simply visit the website on a supported browser (like Chrome or Safari). An "Install App" button will smoothly appear in the top right corner of the home screen!
+
+## 🚀 Local Development Setup
 
 1. **Clone the repository** (or download the source code).
 2. **Setup the Server (Backend)**
@@ -41,54 +55,21 @@ A temporary, modern one-to-one video calling web application built with the MERN
 
 4. **Test Locally**
    - Open `http://localhost:5173` in your browser.
-   - Click "New Meeting" to generate a room.
-   - Copy the URL or Room ID and open it in another tab or browser to simulate a second user.
+   - Click "Start New Meeting" to generate a room.
+   - Copy the Room ID and open it in another tab or browser to simulate a second user.
 
-## Environment Variables
-
-### Server (`server/.env` - optional for local dev)
-```env
-PORT=5000
-CLIENT_URL=http://localhost:5173
-```
-*Note for production: Set `CLIENT_URL` to your Vercel deployment URL.*
-
-### Client (`client/.env`)
-```env
-VITE_SERVER_URL=http://localhost:5000
-```
-*Note for production: Set `VITE_SERVER_URL` to your Render deployment URL.*
-
-## Deployment Guide
+## 🌍 Deployment Guide
 
 ### Deploying the Backend (Render)
-
 1. Push your code to a GitHub repository.
 2. Go to [Render.com](https://render.com/) and create a new **Web Service**.
-3. Connect your GitHub repository.
-4. Configure the service:
-   - **Root Directory**: `server`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-5. Add Environment Variables:
-   - `CLIENT_URL`: The URL where your frontend will be deployed (e.g., `https://your-frontend.vercel.app`).
-6. Deploy the service and copy the generated Render URL.
+3. Connect your GitHub repository and set the Root Directory to `server`.
+4. Build Command: `npm install` | Start Command: `npm start`
+5. Add Environment Variable: `CLIENT_URL` = `https://your-frontend.vercel.app`
 
 ### Deploying the Frontend (Vercel)
-
 1. Go to [Vercel.com](https://vercel.com/) and create a new Project.
-2. Import your GitHub repository.
-3. Configure the project:
-   - **Framework Preset**: Vite
-   - **Root Directory**: `client`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Add Environment Variables:
-   - `VITE_SERVER_URL`: The URL of your deployed Render backend (e.g., `https://your-backend.onrender.com`).
-5. Deploy the project.
-
-## Architecture & Code Quality
-- **Signaling**: Socket.IO is used exclusively for signaling (exchanging offer, answer, and ICE candidates).
-- **Media**: Video and audio are transmitted peer-to-peer via WebRTC. Media never passes through the Express server.
-- **Components**: UI is broken down into reusable React components (`VideoPlayer`, `Controls`).
-- **Custom Hook**: All WebRTC logic is encapsulated inside `hooks/useWebRTC.js` for clean separation of concerns.
+2. Import your GitHub repository and set the Root Directory to `client`.
+3. Framework Preset: **Vite**
+4. Add Environment Variable: `VITE_SERVER_URL` = `https://your-backend.onrender.com`
+5. Deploy the project! The PWA Service Worker and Manifest will be built automatically.
