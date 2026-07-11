@@ -12,6 +12,16 @@ A completely private, secure, and modern one-to-one video calling web applicatio
 - **📌 Draggable Picture-in-Picture:** Custom PiP overlay that can be freely dragged anywhere on the screen with smart edge-clamping.
 - **📱 Native Mobile App Feel:** Hideable controls, disabled pull-to-refresh on calls, disabled zooming, and touch-friendly UI.
 
+## 🔔 Serverless Push Notification Calling (New!)
+
+VCall features a fully decentralized Push Notification calling system. No user accounts or central databases are required to build your contact list!
+
+- **📞 Calling Codes:** Generate your unique "Calling Code" securely tied to your device's push subscription.
+- **👤 Decentralized Contacts:** Add friends by saving their Calling Codes into your browser's local `IndexedDB`.
+- **🚀 One-Click Calling:** Clicking "Call" next to a friend instantly generates a room, secretly sends a push payload to their device via Web-Push VAPID keys, and opens the room on your end.
+- **📱 Native Ringing:** The incoming call triggers system-native vibrations and beautiful in-app React modals if the app is already open.
+- **👻 Ghost Call Cancellation:** If you hang up before your friend answers, the app sends a secret cancel signal to instantly erase the ringing notification from their screen!
+
 ## 🔴 Local Call Recording (New!)
 
 VCall now supports secure, fully local call recording! Your recordings are never uploaded to a server—they are saved directly to your browser's IndexedDB.
@@ -71,5 +81,7 @@ VCall is fully configured as a Progressive Web App. You can install it directly 
 1. Go to [Vercel.com](https://vercel.com/) and create a new Project.
 2. Import your GitHub repository and set the Root Directory to `client`.
 3. Framework Preset: **Vite**
-4. Add Environment Variable: `VITE_SERVER_URL` = `https://your-backend.onrender.com`
+4. Add Environment Variables: 
+   - `VITE_SERVER_URL` = `https://your-backend.onrender.com`
+   - `VITE_PUBLIC_VAPID_KEY` = `your_public_key`
 5. Deploy the project! The PWA Service Worker and Manifest will be built automatically.
