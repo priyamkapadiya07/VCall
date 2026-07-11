@@ -20,25 +20,59 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  // Handle Cancel Event
+  if (data.type === 'cancel' && data.roomId) {
+    event.waitUntil(
+      self.registration.getNotifications({ tag: data.roomId }).then((notifications) => {
+        notifications.forEach(notification => notification.close());
+      })
+    );
+    // Also notify any open app to stop the in-app ringing
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+        const appClient = windowClients.find(client => client.url.startsWith(self.location.origin));
+        if (appClient) {
+          appClient.postMessage({ type: 'CANCEL_CALL', roomId: data.roomId });
+        }
+      })
+    );
+    return; 
+  }
+
   const title = data.title || 'Incoming Video Call';
-  const options = {
-    body: data.body || 'Someone is calling you. Tap to answer.',
-    icon: '/favicon.svg',
-    badge: '/favicon.svg',
-    // Aggressive ringing pattern: vibrate for 500ms, pause for 200ms, repeat
-    vibrate: [500, 200, 500, 200, 500, 200, 500, 200, 500, 200, 500, 200, 500], 
-    data: {
-      url: data.url || '/'
-    },
-    requireInteraction: true, // Keep notification open until the user clicks it
-    actions: [
-      { action: 'answer', title: 'Answer Call' },
-      { action: 'decline', title: 'Decline' }
-    ]
-  };
+  const urlPath = data.url || '/';
+  const roomId = data.roomId || (urlPath.includes('/room/') ? urlPath.split('/').pop() : 'default-call');
 
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      const appClient = windowClients.find(client => client.url.startsWith(self.location.origin));
+      
+      if (appClient) {
+        // App is open! Tell the React app to show the in-app modal instead of a system notification
+        appClient.postMessage({ type: 'INCOMING_CALL', data: { title, url: urlPath, roomId, body: data.body } });
+        return;
+      }
+
+      // App is closed, show system notification
+      const options = {
+        body: data.body || 'Someone is calling you. Tap to answer.',
+        icon: '/favicon.svg',
+        badge: '/favicon.svg',
+        tag: roomId, // Tag allows us to close it remotely if canceled
+        vibrate: [500, 200, 500, 200, 500, 200, 500, 200, 500, 200, 500, 200, 500], 
+        data: {
+          url: urlPath,
+          roomId
+        },
+        requireInteraction: true,
+        actions: [
+          { action: 'answer', title: 'Answer Call' },
+          { action: 'decline', title: 'Decline' }
+        ]
+      };
+
+      return self.registration.showNotification(title, options);
+    })
   );
 });
 
@@ -54,17 +88,14 @@ self.addEventListener('notificationclick', (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Find any open tab of our app
       const appClient = windowClients.find(client => client.url.startsWith(self.location.origin));
       
       if (appClient) {
-        // If an app tab is open, focus it and tell React to route there instantly
         appClient.focus();
         appClient.postMessage({ type: 'NAVIGATE', url: targetPath });
         return;
       }
       
-      // If the app is fully closed, open a new window
       if (self.clients.openWindow) {
         return self.clients.openWindow(urlToOpen);
       }

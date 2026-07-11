@@ -104,7 +104,7 @@ export default function Contacts() {
         })
       });
       
-      navigate(`/room/${roomId}`);
+      navigate(`/room/${roomId}`, { state: { calledSubscription: subscription } });
     } catch (e) {
       console.error(e);
       alert('Failed to call friend. Ensure they have the app installed.');

@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import Draggable from 'react-draggable';
 import useWebRTC from '../hooks/useWebRTC';
@@ -10,6 +10,7 @@ import { saveRecording } from '../utils/indexedDB';
 export default function Room() {
   const { id: roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const { 
     localStream, 
@@ -180,11 +181,29 @@ export default function Room() {
     setIsVideoOn(newState);
   };
 
-  const handleEndCall = () => {
+  const handleEndCall = async () => {
     if (isRecording) {
       stopRecording();
     }
     stopMedia();
+    
+    // If we haven't connected yet and we called a friend directly, send cancel push
+    if (connectionState !== 'connected' && location.state?.calledSubscription) {
+      try {
+        const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+        await fetch(`${serverUrl}/api/push`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription: location.state.calledSubscription,
+            payload: { type: 'cancel', roomId }
+          })
+        });
+      } catch (e) {
+        console.error('Failed to send cancel push', e);
+      }
+    }
+
     navigate('/');
   };
 
