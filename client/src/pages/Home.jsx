@@ -1,10 +1,64 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Video, Keyboard, Plus, Sparkles, Shield, Zap } from 'lucide-react';
+import { Video, Keyboard, Plus, Sparkles, Shield, Zap, DownloadCloud } from 'lucide-react';
 
 export default function Home() {
   const [roomId, setRoomId] = useState('');
   const navigate = useNavigate();
+
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    // If already running as an installed PWA, do not show install prompt
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Also listen for display-mode changes just in case
+    const mediaQuery = window.matchMedia('(display-mode: standalone)');
+    const handleMediaQueryChange = (e) => {
+      if (e.matches) {
+        setIsInstallable(false);
+      }
+    };
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaQueryChange);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaQueryChange);
+      }
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstallable(false);
+      }
+      setDeferredPrompt(null);
+    }
+  };
 
   const handleJoin = (e) => {
     e.preventDefault();
@@ -18,9 +72,50 @@ export default function Home() {
     navigate(`/room/${id}`);
   };
 
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+
+  const handleSecretClick = () => {
+    clickCountRef.current += 1;
+    if (clickCountRef.current === 3) {
+      navigate('/record');
+      clickCountRef.current = 0;
+    }
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, 500);
+  };
+
+  const handleSecretTouchStart = () => {
+    longPressTimerRef.current = setTimeout(() => {
+      navigate('/record');
+    }, 800);
+  };
+
+  const handleSecretTouchEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-8 bg-[#0a0a0a] relative overflow-hidden">
       
+      {/* Install App Button */}
+      {isInstallable && (
+        <div className="fixed glass-panel top-4 right-4 md:top-8 md:right-8 z-50">
+          <button 
+            onClick={handleInstallClick}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-white/10 to-white/20 hover:from-white/30 hover:to-white/10 text-white text-sm font-medium rounded-2xl  transition-all hover:scale-101 cursor-pointer"
+          >
+            <DownloadCloud className="w-4 h-4" />
+            Install App
+          </button>
+        </div>
+      )}
+
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px]"></div>
@@ -93,7 +188,13 @@ export default function Home() {
               </div>
               <span className="text-sm font-medium text-gray-300">Fast P2P Connection</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div 
+              className="flex items-center gap-3 cursor-pointer select-none"
+              onClick={handleSecretClick}
+              onTouchStart={handleSecretTouchStart}
+              onTouchEnd={handleSecretTouchEnd}
+              onTouchCancel={handleSecretTouchEnd}
+            >
               <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0">
                 <Shield className="w-5 h-5 text-purple-400" />
               </div>
@@ -103,7 +204,7 @@ export default function Home() {
         </div>
 
         {/* Right Section - 3D Image */}
-        <div className="order-1 lg:order-2 flex justify-center items-center relative perspective-1000 mb-8 lg:mb-0">
+        <div className="order-1 lg:order-2 flex justify-center items-center relative perspective-1000 mb-8 lg:mb-0 mt-5">
           <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500/20 to-cyan-500/20 rounded-full blur-3xl scale-90 mix-blend-screen"></div>
           <img 
             src="/hero-image.png" 
