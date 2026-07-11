@@ -128,7 +128,7 @@ export default function Recordings() {
                       <h3 className="font-medium text-white capitalize">{rec.type} Recording</h3>
                       <div className="flex items-center text-xs text-gray-400 mt-1 gap-1">
                         <Calendar className="w-3 h-3" />
-                        {new Date(rec.timestamp).toLocaleDateString()}
+                        {new Date(rec.timestamp).toLocaleDateString()} | {new Date(rec.timestamp).toLocaleTimeString()}
                       </div>
                     </div>
                   </div>
