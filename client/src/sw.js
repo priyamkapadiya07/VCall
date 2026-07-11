@@ -55,6 +55,8 @@ self.addEventListener('push', (event) => {
         return;
       }
 
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
       // App is closed, show system notification
       const options = {
         body: data.body || 'Someone is calling you. Tap to answer.',
@@ -67,7 +69,7 @@ self.addEventListener('push', (event) => {
           roomId
         },
         requireInteraction: true,
-        actions: [
+        actions: isMobile ? [] : [
           { action: 'answer', title: 'Answer Call' },
           { action: 'decline', title: 'Decline' }
         ]
