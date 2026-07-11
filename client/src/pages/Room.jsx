@@ -46,6 +46,18 @@ export default function Room() {
   const recordedChunksRef = useRef([]);
   const recordingTypeRef = useRef('audio');
   const recordingTimeRef = useRef(0);
+  const timerIntervalRef = useRef(null);
+
+  // Prevent pull-to-refresh and vertical scrolling strictly on the Room page
+  useEffect(() => {
+    document.body.style.overscrollBehaviorY = 'none';
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.body.style.overscrollBehaviorY = 'auto';
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     let interval;
@@ -216,7 +228,7 @@ export default function Room() {
   }
 
   return (
-    <div className="h-[100dvh] w-full bg-[#0f1115] relative overflow-hidden flex flex-col">
+    <div className="fixed inset-0 w-full h-[100dvh] bg-[#0f1115] overflow-hidden flex flex-col overscroll-none">
       
       {showRecordPrompt && (
         <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm">
