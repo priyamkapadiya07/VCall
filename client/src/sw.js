@@ -45,11 +45,13 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      const appClient = windowClients.find(client => client.url.startsWith(self.location.origin));
+      const visibleAppClient = windowClients.find(client => 
+        client.url.startsWith(self.location.origin) && client.visibilityState === 'visible'
+      );
       
-      if (appClient) {
-        // App is open! Tell the React app to show the in-app modal instead of a system notification
-        appClient.postMessage({ type: 'INCOMING_CALL', data: { title, url: urlPath, roomId, body: data.body } });
+      if (visibleAppClient) {
+        // App is open and visible! Tell the React app to show the in-app modal instead of a system notification
+        visibleAppClient.postMessage({ type: 'INCOMING_CALL', data: { title, url: urlPath, roomId, body: data.body } });
         return;
       }
 
@@ -83,22 +85,31 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  const targetPath = event.notification.data.url || '/';
+  const targetPath = (event.notification.data && event.notification.data.url) ? event.notification.data.url : '/';
   const urlToOpen = new URL(targetPath, self.location.origin).href;
 
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      const appClient = windowClients.find(client => client.url.startsWith(self.location.origin));
-      
-      if (appClient) {
-        appClient.focus();
-        appClient.postMessage({ type: 'NAVIGATE', url: targetPath });
-        return;
+  const handleNavigation = async () => {
+    // If they explicitly clicked the 'Answer' button, some Android devices block focus().
+    // We will aggressively try to open the window or focus it.
+    const windowClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const appClient = windowClients.find(client => client.url.startsWith(self.location.origin));
+
+    if (appClient) {
+      appClient.postMessage({ type: 'NAVIGATE', url: targetPath });
+      try {
+        await appClient.focus();
+      } catch (e) {
+        // Fallback if focus is blocked by Android for action buttons
+        if (event.action === 'answer' && self.clients.openWindow) {
+           await self.clients.openWindow(urlToOpen);
+        }
       }
-      
+    } else {
       if (self.clients.openWindow) {
-        return self.clients.openWindow(urlToOpen);
+        await self.clients.openWindow(urlToOpen);
       }
-    })
-  );
+    }
+  };
+
+  event.waitUntil(handleNavigation());
 });
