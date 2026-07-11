@@ -49,18 +49,22 @@ self.addEventListener('notificationclick', (event) => {
     return;
   }
 
-  const urlToOpen = new URL(event.notification.data.url, self.location.origin).href;
+  const targetPath = event.notification.data.url || '/';
+  const urlToOpen = new URL(targetPath, self.location.origin).href;
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Check if there is already a window/tab open with the target URL
-      for (let i = 0; i < windowClients.length; i++) {
-        const client = windowClients[i];
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus();
-        }
+      // Find any open tab of our app
+      const appClient = windowClients.find(client => client.url.startsWith(self.location.origin));
+      
+      if (appClient) {
+        // If an app tab is open, focus it and tell React to route there instantly
+        appClient.focus();
+        appClient.postMessage({ type: 'NAVIGATE', url: targetPath });
+        return;
       }
-      // If not, then open the target URL in a new window/tab.
+      
+      // If the app is fully closed, open a new window
       if (self.clients.openWindow) {
         return self.clients.openWindow(urlToOpen);
       }
