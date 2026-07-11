@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Video, Keyboard, Plus, Sparkles, Shield, Zap, DownloadCloud } from 'lucide-react';
+import Contacts from '../components/Contacts';
 
 export default function Home() {
   const [roomId, setRoomId] = useState('');
@@ -178,6 +179,9 @@ export default function Home() {
                 Join
               </button>
             </form>
+
+            {/* Contacts Integration */}
+            <Contacts />
           </div>
 
           {/* Features Row */}
