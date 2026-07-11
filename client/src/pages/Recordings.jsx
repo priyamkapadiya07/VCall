@@ -10,6 +10,7 @@ export default function Recordings() {
   const [deleteId, setDeleteId] = useState(null);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchRecordings();
   }, []);
 
